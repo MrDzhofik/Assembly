@@ -2,14 +2,18 @@
 
 section .data
 ; сегмент инициализированных переменных
-Msg db "Enter a, c(not null), d, l", 10 ; выводимое сообщение
+ZeroMsg db "C is equal zero",10
+lenZero equ $-ZeroMsg
+
+Msg dq "Enter a, c(not null), d, l", 10 ; выводимое сообщение
 len db $-Msg
 
 ; сегмент неинициализированных переменных
 section .bss
 OutBuf resb 10 ; буфер для вводимой строки
 lenOut equ $-OutBuf
-
+CBuf resb 10 ; буфер для вводимой строки
+lenC equ $-CBuf
 X resw 1
 InBuf resb 10
 lenIn equ $-InBuf
@@ -48,7 +52,20 @@ _start:
     syscall
     mov rsi, InBuf
     call StrToInt64
+    ; cmp EBX, 0
+    ; jne StrToInt64.Error
     mov [c], rax
+
+
+    mov rsi, CBuf ; адрес выводимой строки
+    mov rax, [c]
+    cwde
+    call IntToStr64
+    mov rbp, rax
+    mov rax, 1 ; системная функция 1 (write)
+    mov rdi, 1 ; дескриптор файла stdout=1
+    mov rdx, rbp ; длина выводимой строки
+    syscall ; вызов системной функции
 
     ; read d
     mov rax, 0
@@ -70,20 +87,26 @@ _start:
     call StrToInt64
     mov [l], rax
 
+    mov eax, [c]
+    cmp eax, 0
+    je  zero 
+
     ; solve
     mov EAX, [l]
     sub EAX, [a]
     imul EAX
-    mov BL, [c]
-    idiv BL
+    mov ebx, [c]
+    idiv ebx
     add EAX, [d]
     sub EAX, [l]
     mov EBX, EAX
     mov EAX, [c]
-    mov CL, 2
-    idiv CL
+    mov ECX, 2
+    idiv ECX
     add EAX, EBX
     mov [result], EAX
+
+   
 
     ; write
     mov rsi, OutBuf ; адрес выводимой строки
@@ -96,7 +119,16 @@ _start:
     mov rdx, rbp ; длина выводимой строки
     syscall ; вызов системной функции
 
-    ; exit
+
+    zero:
+    mov rax, 1; системная функция 1 (write)
+    mov rdi, 1; дескриптор файла stdout=1
+    mov rsi, ZeroMsg ; адрес выводимой строки
+    mov rdx, lenZero; длина строки
     mov rax, 60 ; системная функция 60 (exit)
     xor rdi, rdi ; return code 0
+    syscall
+
+    ; exit
+    
     syscall
