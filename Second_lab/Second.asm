@@ -52,8 +52,6 @@ _start:
     syscall
     mov rsi, InBuf
     call StrToInt64
-    ; cmp EBX, 0
-    ; jne StrToInt64.Error
     mov [c], rax
 
 
@@ -127,8 +125,4 @@ _start:
     mov rdx, lenZero; длина строки
     mov rax, 60 ; системная функция 60 (exit)
     xor rdi, rdi ; return code 0
-    syscall
-
-    ; exit
-    
     syscall
