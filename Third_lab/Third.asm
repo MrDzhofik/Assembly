@@ -40,7 +40,7 @@ _start:
     mov rax, 0 ; системная функция 0 (read)
     mov rdi, 0 ; дескриптор файла stdin=1
     mov rsi, InBuf ; адрес вводимой строки
-    mov rdx, 4 ; длина строки
+    mov rdx, 6 ; длина строки
     syscall ; вызов системной функции
     mov rsi, InBuf ; адрес введеной строки
     call StrToInt64 ; преобразование введеной строки в число
@@ -50,7 +50,7 @@ _start:
     mov rax, 0
     mov rdi, 0
     mov rsi, InBuf
-    mov rdx, 4
+    mov rdx, 6
     syscall
     mov rsi, InBuf
     call StrToInt64
@@ -134,6 +134,7 @@ _start:
         mov rdi, 1; дескриптор файла stdout=1
         mov rsi, ZeroMsg ; адрес выводимой строки
         mov rdx, lenZero ; длина строки
+        syscall
         mov rax, 60 ; системная функция 60 (exit)
         xor rdi, rdi ; return code 0
         syscall

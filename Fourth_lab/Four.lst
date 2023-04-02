@@ -1,0 +1,261 @@
+     1                                  %include "../lib64.asm"
+     1                              <1> section .text     ; ������� ����
+     2                              <1> IntToStr64: 
+     3 00000000 57                  <1>          push   rdi
+     4 00000001 53                  <1>          push   rbx
+     5 00000002 52                  <1>          push   rdx
+     6 00000003 51                  <1>          push   rcx
+     7 00000004 56                  <1> 		 push   rsi
+     8 00000005 C60600              <1> 		 mov    byte[rsi], 0 ; �� ����� �����
+     9 00000008 83F800              <1>          cmp    eax,0
+    10 0000000B 7D05                <1>          jge    .l1
+    11 0000000D F7D8                <1>          neg    eax
+    12 0000000F C6062D              <1>          mov    byte[rsi],'-'
+    13 00000012 C646060A            <1> .l1      mov    byte[rsi+6],10
+    14 00000016 BF05000000          <1>          mov    rdi,5
+    15 0000001B 66BB0A00            <1>          mov    bx,10
+    16 0000001F 6699                <1> .again:  cwd           ; ��������� ����� �� ��������
+    17 00000021 66F7F3              <1>          div    bx     ; ����� ��������� �� 10
+    18 00000024 80C230              <1>          add    dl,30h ; �������� �� ������� ��� �����
+    19 00000027 88143E              <1>          mov    [rsi+rdi],dl ; ����� ������ � ������
+    20 0000002A 48FFCF              <1>          dec    rdi    ; ��������� ��������� ��  
+    21                              <1>                        ; ���������� �������
+    22 0000002D 6683F800            <1>          cmp    ax, 0  ; ������������� ��� �����?
+    23 00000031 75EC                <1>          jne    .again
+    24 00000033 B906000000          <1>          mov    rcx, 6
+    25 00000038 4829F9              <1>          sub    rcx, rdi ; ����� ����������+����
+    26 0000003B 4889C8              <1> 		 mov    rax,rcx
+    27 0000003E 48FFC0              <1> 		 inc    rax    ; ����� ����������+OA
+    28 00000041 48FFC6              <1>          inc    rsi    ; ���������� ����
+    29 00000044 56                  <1> 		 push   rsi
+    30 00000045 488D343E            <1>          lea    rsi,[rsi+rdi] ; ������ ����������
+    31 00000049 5F                  <1> 		 pop    rdi
+    32 0000004A F3A4                <1>          rep movsb
+    33 0000004C 5E                  <1>          pop    rsi  
+    34 0000004D 59                  <1>          pop    rcx
+    35 0000004E 5A                  <1>          pop    rdx
+    36 0000004F 5B                  <1>          pop    rbx
+    37 00000050 5F                  <1>          pop    rdi
+    38 00000051 C3                  <1>          ret
+    39                              <1> StrToInt64:
+    40 00000052 57                  <1>          push   rdi
+    41 00000053 B739                <1>          mov    bh, '9'
+    42 00000055 B330                <1>          mov    bl, '0'
+    43 00000057 56                  <1>          push   rsi     ; ��������� ����� �������� ������
+    44 00000058 803E2D              <1>          cmp    byte[rsi], '-'
+    45 0000005B 7503                <1>          jne    .prod
+    46 0000005D 48FFC6              <1>          inc    rsi     ; ���������� ����
+    47 00000060 FC                  <1> .prod    cld
+    48 00000061 6631FF              <1>          xor    di, di  ; �������� ������� �����
+    49 00000064 AC                  <1> .cycle:  lodsb          ; ��������� ������ (�����)
+    50 00000065 3C0A                <1>          cmp    al, 10  ; ���� 10, �� �� �����
+    51 00000067 741F                <1>          je     .Return
+    52 00000069 38D8                <1>          cmp    al, bl  ; ���������� � ����� ����
+    53 0000006B 722F                <1>          jb     .Error  ; "����" � ������
+    54 0000006D 38F8                <1>          cmp    al, bh  ; ���������� � ����� ������ 
+    55 0000006F 772B                <1>          ja     .Error  ; "����" � ������
+    56 00000071 2C30                <1>          sub    al, 30h ; �������� ����� �� �������
+    57 00000073 6698                <1>          cbw            ; ��������� �� �����
+    58 00000075 6650                <1>          push   ax      ; ��������� � �����
+    59 00000077 66B80A00            <1>          mov    ax, 10  ; ������� 10 � AX
+    60 0000007B 66F7E7              <1>          mul    di      ; ��������, ��������� � DX:AX
+    61 0000007E 665F                <1>          pop    di      ; � DI � ��������� �����
+    62 00000080 6601F8              <1>          add    ax, di
+    63 00000083 6689C7              <1>          mov    di, ax  ; � DI � ����������� �����        
+    64 00000086 EBDC                <1>          jmp    .cycle
+    65 00000088 5E                  <1> .Return: pop    rsi
+    66 00000089 BB00000000          <1>          mov    rbx, 0
+    67 0000008E 803E2D              <1>          cmp    byte[rsi], '-'
+    68 00000091 7503                <1>          jne    .J
+    69 00000093 66F7DF              <1>          neg    di
+    70 00000096 6689F8              <1> .J       mov    ax, di
+    71 00000099 98                  <1>          cwde
+    72 0000009A EB0B                <1>          jmp    .R
+    73 0000009C 5E                  <1> .Error:  pop    rsi
+    74 0000009D B800000000          <1>          mov    rax, 0
+    75 000000A2 BB01000000          <1>          mov    rbx, 1
+    76 000000A7 5F                  <1> .R       pop    rdi
+    77 000000A8 C3                  <1>          ret
+     2                                  
+     3                                  %define STDIN 0
+     4                                  %define READ 0
+     5                                  %define STDOUT 1
+     6                                  %define WRITE 1
+     7                                  %define EXIT 60
+     8                                  
+     9                                  %define ROWS 6
+    10                                  %define COLUMNS 4
+    11                                  %define MATRIX_SIZE 24
+    12                                  
+    13                                  section .data
+    14 00000000 456E74657220362A34-         StartMsg db "Enter 6*4 matrix:", 10
+    14 00000009 206D61747269783A0A 
+    15                                      StartLen equ $-StartMsg
+    16 00000012 0A                          NewLine: db 0xA
+    17 00000013 526573756C743A0A            ResultMsg db "Result:", 10
+    18                                      ResultLen equ $-ResultMsg
+    19                                  
+    20                                  
+    21                                  
+    22 0000001B 2020                        Space db "  "
+    23                                  
+    24                                  section .bss
+    25 00000000 <res 00000060>              matrix times MATRIX_SIZE resd 1
+    26 00000060 <res 00000090>              sums   times ROWS        resd 6
+    27                                  
+    28 000000F0 <res 00000002>              OutBuf resw 1
+    29                                      lenOut equ $-OutBuf
+    30 000000F2 <res 00000050>              InBuf resq 10
+    31                                      lenIn equ $-InBuf
+    32                                  
+    33                                  
+    34                                  section .text
+    35                                  global _start
+    36                                  
+    37                                  _start:
+    38 000000A9 B801000000                  mov rax, WRITE
+    39 000000AE BF01000000                  mov rdi, STDOUT
+    40 000000B3 48BE-                       mov rsi, StartMsg
+    40 000000B5 [0000000000000000] 
+    41 000000BD BA12000000                  mov rdx, StartLen
+    42 000000C2 0F05                        syscall
+    43                                  
+    44 000000C4 B906000000                  mov rcx, ROWS
+    45 000000C9 4831FF                      xor rdi, rdi
+    46                                  
+    47                                  read_line:
+    48 000000CC 51                          push rcx
+    49 000000CD 57                          push rdi
+    50                                  
+    51 000000CE B800000000                  mov rax, READ
+    52 000000D3 BF00000000                  mov rdi, STDIN
+    53 000000D8 48BE-                       mov rsi, InBuf
+    53 000000DA [F200000000000000] 
+    54 000000E2 BA50000000                  mov rdx, lenIn
+    55 000000E7 0F05                        syscall
+    56                                  
+    57 000000E9 5F                          pop rdi
+    58 000000EA 4889C1                      mov rcx, rax ; Сохраням длину строки
+    59 000000ED 4831D2                      xor rdx, rdx ; Обнуляем регистр
+    60 000000F0 4D31C0                      xor r8, r8 ; Обнуляем регистр
+    61                                  
+    62                                  process_line:
+    63 000000F3 80BA[F2000000]0A            cmp byte[InBuf + rdx], 10; Если конец строки то обрабатываем число
+    64 000000FA 7417                        je process_number
+    65                                  
+    66 000000FC 80BA[F2000000]20            cmp byte[InBuf + rdx], ' '; Если был не конец, и следующий символ 
+    67 00000103 752D                        jne next; не пробел, то продолжаем считывание
+    68                                  
+    69 00000105 C682[F2000000]0A            mov byte[InBuf + rdx], 10; Помещаем вместо пробела \n
+    70 0000010C 4939D0                      cmp r8, rdx; Если длина строки не совпадает с предыдущей
+    71 0000010F 7502                        jne process_number
+    72 00000111 EB1F                        jmp next
+    73                                  
+    74                                  process_number:
+    75 00000113 52                          push rdx
+    76                                  
+    77 00000114 E839FFFFFF                  call StrToInt64
+    78                                  
+    79 00000119 488904BD[00000000]          mov [matrix + 4 * rdi], rax; Помещаем результат в матрицу
+    80 00000121 48FFC7                      inc rdi; увеличиваем счетчик введенных чисел
+    81                                  
+    82 00000124 5A                          pop rdx
+    83 00000125 4989D0                      mov r8, rdx; Теперь считывать следующее число надо начинать с 
+    84 00000128 49FFC0                      inc r8; окончания длины предыдущего
+    85 0000012B 498DB0[F2000000]            lea rsi, [InBuf + r8]; Передаем указатель на смещенный буфер
+    86                                  
+    87                                  next:
+    88 00000132 48FFC2                      inc rdx; Увеличиваем длину числа
+    89 00000135 E2BC                        loop process_line
+    90                                  
+    91 00000137 59                          pop rcx
+    92                                  
+    93 00000138 48FFC9                      dec rcx
+    94 0000013B 4883F900                    cmp rcx, 0
+    95 0000013F 758B                        jnz read_line 
+    96                                      
+    97 00000141 B906000000                  mov rcx, ROWS
+    98 00000146 BF00000000                  mov rdi, 0
+    99 0000014B BA00000000                  mov rdx, 0; Обнуляем подсчет текущей строки
+   100                                  
+   101                                  sum_row:
+   102 00000150 51                          push rcx
+   103 00000151 B800000000                  mov rax, 0
+   104 00000156 B904000000                  mov rcx, COLUMNS
+   105                                  
+   106                                  add_elem:
+   107 0000015B 48030495[00000000]          add rax, [matrix + 4 * rdx]
+   108 00000163 48FFC2                      inc rdx
+   109 00000166 E2F3                        loop add_elem
+   110 00000168 59                          pop RCX
+   111 00000169 488904BD[60000000]          mov [sums + 4 * rdi], rax
+   112 00000171 48FFC7                      inc rdi
+   113 00000174 E2DA                        loop sum_row
+   114                                  
+   115                                  output:
+   116 00000176 B801000000                  mov rax, WRITE
+   117 0000017B BF01000000                  mov rdi, STDOUT
+   118 00000180 48BE-                       mov rsi, ResultMsg
+   118 00000182 [1300000000000000] 
+   119 0000018A BA08000000                  mov rdx, ResultLen
+   120 0000018F 0F05                        syscall
+   121                                  
+   122 00000191 4831DB                      xor rbx, rbx; Обнуляем регистры
+   123 00000194 4831D2                      xor rdx, rdx
+   124                                  
+   125 00000197 B906000000                  mov rcx, ROWS
+   126                                  check:
+   127 0000019C 51                          push rcx
+   128 0000019D 8B04AD[60000000]            mov eax, [sums + 4 * rbp] ; массив сумм строк
+   129 000001A4 48FFC5                      inc rbp
+   130 000001A7 4883F900                    cmp rcx, 0
+   131 000001AB 0F848A000000                je exit
+   132 000001B1 83F800                      cmp eax, 0 ; проверяем какая сумма элементов строки
+   133 000001B4 7D09                        JGE output_row
+   134 000001B6 4883C304                    add rbx, COLUMNS ; если отрицательное, то смещаем регистр на количество столбцов
+   135 000001BA 59                          pop rcx
+   136 000001BB E2DF                        loop check
+   137 000001BD EB7C                        jmp exit
+   138                                  
+   139                                  output_row:
+   140 000001BF B904000000                  mov rcx, COLUMNS
+   141                                  output_column:
+   142 000001C4 51                          push rcx
+   143 000001C5 48BE-                       mov rsi, OutBuf
+   143 000001C7 [F000000000000000] 
+   144 000001CF 8B049D[00000000]            mov eax, [matrix + 4 * rbx]
+   145 000001D6 48FFC3                      inc rbx
+   146 000001D9 E822FEFFFF                  call IntToStr64
+   147                                  
+   148 000001DE B801000000                  mov rax, WRITE; системная функция 1 (write)
+   149 000001E3 BF01000000                  mov rdi, STDOUT; дескриптор файла stdout=1
+   150 000001E8 48BE-                       mov rsi, OutBuf ; адрес выводимой строки
+   150 000001EA [F000000000000000] 
+   151 000001F2 BA02000000                  mov rdx, lenOut ; длина строки
+   152 000001F7 0F05                        syscall; вызов системной функции
+   153                                  
+   154 000001F9 B801000000                  mov rax, 1
+   155 000001FE BF01000000                  mov rdi, 1
+   156 00000203 48BE-                       mov rsi, Space; адрес строки с пробелом
+   156 00000205 [1B00000000000000] 
+   157 0000020D BA01000000                  mov rdx, 1
+   158 00000212 0F05                        syscall
+   159                                  
+   160 00000214 59                          pop rcx
+   161 00000215 E2AD                        loop output_column
+   162                                  
+   163 00000217 B801000000                  mov rax, WRITE; системная функция 1 (write)
+   164 0000021C BF01000000                  mov rdi, STDOUT; дескриптор файла stdout=1
+   165 00000221 48BE-                       mov rsi, NewLine ; адрес выводимой строки
+   165 00000223 [1200000000000000] 
+   166 0000022B BA01000000                  mov rdx, 1 ; длина строки
+   167 00000230 0F05                        syscall; вызов системной функции
+   168                                  
+   169 00000232 59                          pop rcx
+   170 00000233 48FFC9                      dec rcx
+   171 00000236 E961FFFFFF                  jmp check
+   172                                  
+   173                                  exit:
+   174 0000023B 4831FF                      xor rdi, rdi
+   175 0000023E B83C000000                  mov rax, EXIT
+   176 00000243 0F05                        syscall
