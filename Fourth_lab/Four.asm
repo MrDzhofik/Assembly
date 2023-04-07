@@ -1,15 +1,5 @@
 %include "../lib64.asm"
 
-%define STDIN 0
-%define READ 0
-%define STDOUT 1
-%define WRITE 1
-%define EXIT 60
-
-%define ROWS 6
-%define COLUMNS 4
-%define MATRIX_SIZE 24
-
 section .data
     StartMsg db "Enter 6*4 matrix:", 10
     StartLen equ $-StartMsg
@@ -20,8 +10,8 @@ section .data
     Space db "  "
 
 section .bss
-    matrix times MATRIX_SIZE resd 1
-    sums   times ROWS        resd 6
+    matrix times 24 resd 1
+    sums   times 6       resd 6
 
     OutBuf resw 1
     lenOut equ $-OutBuf
@@ -33,21 +23,21 @@ section .text
 global _start
 
 _start:
-    mov rax, WRITE
-    mov rdi, STDOUT
-    mov rsi, StartMsg
-    mov rdx, StartLen
-    syscall
+    mov rax, 1; системная функция 1 (write)
+    mov rdi, 1; дескриптор файла stdout=1
+    mov rsi, StartMsg ; адрес выводимой строки
+    mov rdx, StartLen ; длина строки
+    syscall; вызов системной функции
 
-    mov rcx, ROWS
+    mov rcx, 6
     xor rdi, rdi
 
 read_line:
     push rcx
     push rdi
 
-    mov rax, READ
-    mov rdi, STDIN
+    mov rax, 0
+    mov rdi, 0
     mov rsi, InBuf
     mov rdx, lenIn
     syscall
@@ -92,14 +82,14 @@ next:
     cmp rcx, 0
     jnz read_line 
     
-    mov rcx, ROWS
+    mov rcx, 6
     mov rdi, 0
     mov rdx, 0; Обнуляем подсчет текущей строки
 
 sum_row:
     push rcx
     mov rax, 0
-    mov rcx, COLUMNS
+    mov rcx, 4
 
 add_elem:
     add rax, [matrix + 4 * rdx]
@@ -111,16 +101,16 @@ add_elem:
     loop sum_row
 
 output:
-    mov rax, WRITE
-    mov rdi, STDOUT
-    mov rsi, ResultMsg
-    mov rdx, ResultLen
-    syscall
+    mov rax, 1; системная функция 1 (write)
+    mov rdi, 1; дескриптор файла stdout=1
+    mov rsi, ResultMsg ; адрес выводимой строки
+    mov rdx, ResultLen ; длина строки
+    syscall; вызов системной функции
 
     xor rbx, rbx; Обнуляем регистры
     xor rdx, rdx
 
-    mov rcx, ROWS
+    mov rcx, 6
 check:
     push rcx
     mov eax, [sums + 4 * rbp] ; массив сумм строк
@@ -129,13 +119,13 @@ check:
     je exit
     cmp eax, 0 ; проверяем какая сумма элементов строки
     JGE output_row
-    add rbx, COLUMNS ; если отрицательное, то смещаем регистр на количество столбцов
+    add rbx, 4 ; если отрицательное, то смещаем регистр на количество столбцов
     pop rcx
     loop check
     jmp exit
 
 output_row:
-    mov rcx, COLUMNS
+    mov rcx, 4
 output_column:
     push rcx
     mov rsi, OutBuf
@@ -143,8 +133,8 @@ output_column:
     inc rbx
     call IntToStr64
 
-    mov rax, WRITE; системная функция 1 (write)
-    mov rdi, STDOUT; дескриптор файла stdout=1
+    mov rax, 1; системная функция 1 (write)
+    mov rdi, 1; дескриптор файла stdout=1
     mov rsi, OutBuf ; адрес выводимой строки
     mov rdx, lenOut ; длина строки
     syscall; вызов системной функции
@@ -158,8 +148,8 @@ output_column:
     pop rcx
     loop output_column
 
-    mov rax, WRITE; системная функция 1 (write)
-    mov rdi, STDOUT; дескриптор файла stdout=1
+    mov rax, 1; системная функция 1 (write)
+    mov rdi, 1; дескриптор файла stdout=1
     mov rsi, NewLine ; адрес выводимой строки
     mov rdx, 1 ; длина строки
     syscall; вызов системной функции
@@ -170,5 +160,5 @@ output_column:
 
 exit:
     xor rdi, rdi
-    mov rax, EXIT
+    mov rax, 60
     syscall
