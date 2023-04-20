@@ -13,28 +13,31 @@ section .text ; сегмент кода
 global _start
 _start:
     ; write
-    mov rax, 1 ; системная функция 4 (write)
+    mov rax, 1 ; системная функция 1 (write)
     mov rdi, 1 ; дескриптор файла stdout=1
     mov rsi, EnterMsg ; адрес выводимой строки
     mov rdx, lenM ; длина выводимой строки
     syscall; вызов системной функции
     ; read
-    mov rax, 0 ; системная функция 3 (read)
+    mov rax, 0 ; системная функция 0 (read)
     mov rdi, 0 ; дескриптор файла stdin=0
     mov rsi, InBuf ; адрес буфера ввода
     mov rdx, lenIn ; размер буфера
     syscall ; вызов системной функции
     ; подсчет длины введенной строки до кода Enter
     lea rdi, [InBuf] ; загружаем адрес строки в edi
-    mov rcx,lenIn ; загружаем размер буфера ввода
+    mov rcx, 8 ; загружаем размер буфера ввода
     mov al,' ' ; загружаем в al пробел для поиска
     mov ebx,0 ; обнуляем счетчик пробелов
     cld
     
 cic1:
+    push rcx
     AND BX, 1; выполнить операцию AND с маской 1
-    JNZ pod_swap ; перейти к метке swap (если результат не равен 0)
-    scasb ; проверяем очередной символ на пробел
+    JNZ pod_swap ; перейти к метке pod_swap (если результат не равен 0)
+    mov rcx, 9
+    repne scasb ; проверяем очередной символ на пробел
+    pop rcx
     je consl ; если пробел - меняем местами символы
     jmp exit
 
@@ -61,8 +64,9 @@ swap:
     loop cic1
    
 consl: inc ebx ; иначе - увеличиваем счетчик слов
+       loop cic1
 
-exit: loop cic1
+exit: 
     push rsi
     ;write text
     mov rax, 1 ; системная функция 1 (write)
