@@ -39,7 +39,7 @@ section .text
         cdq
         div ebx
         mov [result], eax
-        mov [matrix], eax
+        mov [matrix + 4 * 5], eax ; меняю элемент, стоящий в первой строке на последнем месте
 
         mov ecx, 36
         mov rbx, 0
@@ -49,10 +49,10 @@ section .text
         inc rbx
         mov rsi, OutBuf
         call IntToStr64
+        mov rdx, rax ; длина числа
         mov rax, 1
         mov rdi, 1
         mov rsi, OutBuf
-        mov rdx, 4
         syscall
         pop rcx
         loop cycl

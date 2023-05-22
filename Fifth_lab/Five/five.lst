@@ -1,0 +1,146 @@
+     1                                  %include "../../lib64.asm"
+     1                              <1> section .text     ; ������� ����
+     2                              <1> IntToStr64: 
+     3 00000000 57                  <1>          push   rdi
+     4 00000001 53                  <1>          push   rbx
+     5 00000002 52                  <1>          push   rdx
+     6 00000003 51                  <1>          push   rcx
+     7 00000004 56                  <1> 		 push   rsi
+     8 00000005 C60600              <1> 		 mov    byte[rsi], 0 ; �� ����� �����
+     9 00000008 83F800              <1>          cmp    eax,0
+    10 0000000B 7D05                <1>          jge    .l1
+    11 0000000D F7D8                <1>          neg    eax
+    12 0000000F C6062D              <1>          mov    byte[rsi],'-'
+    13 00000012 C646060A            <1> .l1      mov    byte[rsi+6],10
+    14 00000016 BF05000000          <1>          mov    rdi,5
+    15 0000001B 66BB0A00            <1>          mov    bx,10
+    16 0000001F 6699                <1> .again:  cwd           ; ��������� ����� �� ��������
+    17 00000021 66F7F3              <1>          div    bx     ; ����� ��������� �� 10
+    18 00000024 80C230              <1>          add    dl,30h ; �������� �� ������� ��� �����
+    19 00000027 88143E              <1>          mov    [rsi+rdi],dl ; ����� ������ � ������
+    20 0000002A 48FFCF              <1>          dec    rdi    ; ��������� ��������� ��  
+    21                              <1>                        ; ���������� �������
+    22 0000002D 6683F800            <1>          cmp    ax, 0  ; ������������� ��� �����?
+    23 00000031 75EC                <1>          jne    .again
+    24 00000033 B906000000          <1>          mov    rcx, 6
+    25 00000038 4829F9              <1>          sub    rcx, rdi ; ����� ����������+����
+    26 0000003B 4889C8              <1> 		 mov    rax,rcx
+    27 0000003E 48FFC0              <1> 		 inc    rax    ; ����� ����������+OA
+    28 00000041 48FFC6              <1>          inc    rsi    ; ���������� ����
+    29 00000044 56                  <1> 		 push   rsi
+    30 00000045 488D343E            <1>          lea    rsi,[rsi+rdi] ; ������ ����������
+    31 00000049 5F                  <1> 		 pop    rdi
+    32 0000004A F3A4                <1>          rep movsb
+    33 0000004C 5E                  <1>          pop    rsi  
+    34 0000004D 59                  <1>          pop    rcx
+    35 0000004E 5A                  <1>          pop    rdx
+    36 0000004F 5B                  <1>          pop    rbx
+    37 00000050 5F                  <1>          pop    rdi
+    38 00000051 C3                  <1>          ret
+    39                              <1> StrToInt64:
+    40 00000052 57                  <1>          push   rdi
+    41 00000053 B739                <1>          mov    bh, '9'
+    42 00000055 B330                <1>          mov    bl, '0'
+    43 00000057 56                  <1>          push   rsi     ; ��������� ����� �������� ������
+    44 00000058 803E2D              <1>          cmp    byte[rsi], '-'
+    45 0000005B 7503                <1>          jne    .prod
+    46 0000005D 48FFC6              <1>          inc    rsi     ; ���������� ����
+    47 00000060 FC                  <1> .prod    cld
+    48 00000061 6631FF              <1>          xor    di, di  ; �������� ������� �����
+    49 00000064 AC                  <1> .cycle:  lodsb          ; ��������� ������ (�����)
+    50 00000065 3C0A                <1>          cmp    al, 10  ; ���� 10, �� �� �����
+    51 00000067 741F                <1>          je     .Return
+    52 00000069 38D8                <1>          cmp    al, bl  ; ���������� � ����� ����
+    53 0000006B 722F                <1>          jb     .Error  ; "����" � ������
+    54 0000006D 38F8                <1>          cmp    al, bh  ; ���������� � ����� ������ 
+    55 0000006F 772B                <1>          ja     .Error  ; "����" � ������
+    56 00000071 2C30                <1>          sub    al, 30h ; �������� ����� �� �������
+    57 00000073 6698                <1>          cbw            ; ��������� �� �����
+    58 00000075 6650                <1>          push   ax      ; ��������� � �����
+    59 00000077 66B80A00            <1>          mov    ax, 10  ; ������� 10 � AX
+    60 0000007B 66F7E7              <1>          mul    di      ; ��������, ��������� � DX:AX
+    61 0000007E 665F                <1>          pop    di      ; � DI � ��������� �����
+    62 00000080 6601F8              <1>          add    ax, di
+    63 00000083 6689C7              <1>          mov    di, ax  ; � DI � ����������� �����        
+    64 00000086 EBDC                <1>          jmp    .cycle
+    65 00000088 5E                  <1> .Return: pop    rsi
+    66 00000089 BB00000000          <1>          mov    rbx, 0
+    67 0000008E 803E2D              <1>          cmp    byte[rsi], '-'
+    68 00000091 7503                <1>          jne    .J
+    69 00000093 66F7DF              <1>          neg    di
+    70 00000096 6689F8              <1> .J       mov    ax, di
+    71 00000099 98                  <1>          cwde
+    72 0000009A EB0B                <1>          jmp    .R
+    73 0000009C 5E                  <1> .Error:  pop    rsi
+    74 0000009D B800000000          <1>          mov    rax, 0
+    75 000000A2 BB01000000          <1>          mov    rbx, 1
+    76 000000A7 5F                  <1> .R       pop    rdi
+    77 000000A8 C3                  <1>          ret
+     2                                  
+     3                                  section .data
+     4 00000000 7E6437206162636420-          text dq '~d7 abcd uuuiuu ~t4', 0
+     4 00000009 757575697575207E74-
+     4 00000012 340000000000000000-
+     4 0000001B 0000000000         
+     5 00000020 620000000000000000-          text1 dq 'b', 0
+     5 00000029 00000000000000     
+     6 00000030 11000000                     len dd 17
+     7                                  section .bss
+     8 00000000 <res 00000001>            cur_len resb 1
+     9 00000001 <res 00000001>            CurrentSym resb 1
+    10 00000002 <res 00000064>            original_text resb 100
+    11                                    
+    12                                  global _Z5modifPci
+    13                                  extern _Z6printPc
+    14                                       section .text
+    15                                  _Z5modifPci:
+    16                                       
+    17 000000A9 55                           push    rbp
+    18 000000AA 4889E5                       mov     rbp,rsp
+    19                                       ; mov     [len], rsi ; запись длины строки
+    20 000000AD 488B0C25[30000000]           mov     rcx, [len]
+    21 000000B5 4889FE                       mov rsi, rdi
+    22                                  ;     lea rsi, [text]
+    23 000000B8 488D3C25[20000000]           lea rdi, [text1]
+    24 000000C0 48893C25[02000000]           mov [original_text], rdi
+    25                                  loop1:
+    26 000000C8 803E7E                       cmp byte[rsi], "~"
+    27 000000CB 7413                         je zap
+    28 000000CD A4                           movsb
+    29 000000CE 4883F900                     cmp rcx, 0
+    30 000000D2 7C41                         jl exit
+    31 000000D4 E2F2                         loop loop1
+    32 000000D6 48893C25[02000000]           mov [original_text], rdi
+    33                                       ; lea rdi, [original_text]
+    34 000000DE EB35                         jmp exit
+    35                                  
+    36                                  zap:
+    37 000000E0 48FFC6                      inc rsi
+    38 000000E3 8A06                        mov al, byte[rsi]
+    39 000000E5 880425[01000000]            mov [CurrentSym], al
+    40 000000EC 48FFC6                      inc rsi
+    41 000000EF 8A06                        mov al, byte[rsi]
+    42 000000F1 880425[00000000]            mov [cur_len], al
+    43 000000F8 48FFC6                      inc rsi
+    44                                  ;     push rsi
+    45                                  ;     push rdi
+    46                                  ;     mov rsi, cur_len
+    47                                  ;     call StrToInt64
+    48                                  ;     pop rdi
+    49                                  ;     pop rsi
+    50 000000FB 51                          push rcx
+    51 000000FC 4889C1                      mov rcx, rax
+    52 000000FF 4883E930                    sub rcx, 48
+    53 00000103 56                          push rsi
+    54 00000104 8A0425[01000000]            mov al, [CurrentSym]
+    55 0000010B F3AA                        rep stosb
+    56 0000010D 5E                          pop rsi
+    57 0000010E 59                          pop rcx
+    58 0000010F 4883E903                    sub rcx, 3
+    59 00000113 EBB3                        jmp loop1
+    60                                  
+    61                                  exit:
+    62                                       ; mov     [rdx], esi
+    63 00000115 4889EC                       mov     rsp,rbp
+    64 00000118 5D                           pop     rbp
+    65 00000119 C3                           ret
