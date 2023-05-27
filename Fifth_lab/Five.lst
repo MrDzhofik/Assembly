@@ -1,0 +1,73 @@
+     1                                  section .data
+     2 00000000 7E6437206162636420-         text dq "~d7 abcd ~k4 siu" 
+     2 00000009 7E6B3420736975     
+     3 00000010 1000000000000000            len dq 16
+     4 00000018 620000000000000000-         text1 dq 'b', 0
+     4 00000021 00000000000000     
+     5                                  section .bss
+     6 00000000 <res 00000001>            cur_len resb 1
+     7 00000001 <res 00000001>            CurrentSym resb 1
+     8 00000002 <res 00000190>            original_text resd 100
+     9                                    
+    10                                  global _start
+    11                                  extern _Z5printPc
+    12                                       section .text
+    13                                  _start:
+    14                                  
+    15 00000000 55                           push    rbp
+    16 00000001 4889E5                       mov     rbp, rsp
+    17 00000004 488B0C25[10000000]           mov     rcx, [len]
+    18 0000000C 488D3425[00000000]           lea rsi, [text]
+    19 00000014 488D3C25[18000000]           lea rdi, [text1]
+    20 0000001C 48893C25[02000000]           mov [original_text], rdi
+    21                                  loop1:
+    22 00000024 803E7E                       cmp byte[rsi], "~"
+    23 00000027 740B                         je zap
+    24 00000029 A4                           movsb
+    25 0000002A 4883F900                     cmp rcx, 0
+    26 0000002E 7C3E                         jl exit
+    27 00000030 E2F2                         loop loop1
+    28                                      ;  mov [original_text], rdi
+    29                                      ;  lea rdi, [original_text]
+    30 00000032 EB3A                         jmp exit
+    31                                  
+    32                                  zap:
+    33 00000034 48FFC6                      inc rsi
+    34 00000037 8A06                        mov al, byte[rsi]
+    35 00000039 880425[01000000]            mov [CurrentSym], al
+    36 00000040 48FFC6                      inc rsi
+    37 00000043 8A06                        mov al, byte[rsi]
+    38 00000045 880425[00000000]            mov [cur_len], al
+    39 0000004C 48FFC6                      inc rsi
+    40 0000004F 51                          push rcx
+    41 00000050 89C1                        mov ecx, eax
+    42 00000052 83E930                      sub ecx, 48
+    43 00000055 010C25[10000000]            add [len], ecx
+    44 0000005C 56                          push rsi
+    45 0000005D 8A0425[01000000]            mov al, [CurrentSym]
+    46 00000064 F3AA                        rep stosb
+    47 00000066 5E                          pop rsi
+    48 00000067 59                          pop rcx
+    49 00000068 4883E903                    sub rcx, 3
+    50 0000006C EBB6                        jmp loop1
+    51                                  
+    52                                  exit:
+    53 0000006E 4889FE                      mov rsi, rdi ; адрес выводимой строки
+    54 00000071 482B3425[10000000]          sub rsi, [len]
+    55                                      ; mov rax, [result]
+    56                                      ; cwde
+    57                                      ; call IntToStr64
+    58                                      ; mov rbp, rax
+    59 00000079 B801000000                  mov rax, 1 ; системная функция 1 (write)
+    60 0000007E BF01000000                  mov rdi, 1 ; дескриптор файла stdout=1
+    61 00000083 488B1425[10000000]          mov rdx, [len] ; длина выводимой строки
+    62 0000008B 0F05                        syscall ; вызов системной функции
+    63                                  
+    64 0000008D B83C000000                  mov rax, 60
+    65 00000092 4831ED                      xor rbp, rbp
+    66 00000095 0F05                        syscall
+    67                                      ;  pop rax
+    68                                      ;  pop rcx
+    69                                      ;  mov     rsp,rbp
+    70                                      ;  pop     rbp
+    71                                      ;  ret

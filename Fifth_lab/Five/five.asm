@@ -1,55 +1,45 @@
-%include "../../lib64.asm"
-
 section .data
-     text dq '~d7 abcd uuuiuu ~t4', 0
+     text db "Original text: ", 0
      text1 dq 'b', 0
-     len dd 17
 section .bss
   cur_len resb 1
+  len resb 1
   CurrentSym resb 1
   original_text resb 100
   
-global _Z5modifPci
-extern _Z6printPc
+global modif
+extern print
      section .text
-_Z5modifPci:
-     
+modif:
      push    rbp
-     mov     rbp,rsp
-     ; mov     [len], rsi ; запись длины строки
-     mov     rcx, [len]
+     mov     rbp, rsp
+     mov     [len], rsi
+     mov     rcx, rsi
+     mov [cur_len], rsi
      mov rsi, rdi
-;     lea rsi, [text]
      lea rdi, [text1]
-     mov [original_text], rdi
 loop1:
      cmp byte[rsi], "~"
      je zap
      movsb
      cmp rcx, 0
-     jl exit
+     jle exit
      loop loop1
-     mov [original_text], rdi
-     ; lea rdi, [original_text]
      jmp exit
 
 zap:
     inc rsi
+    xor rax, rax
     mov al, byte[rsi]
     mov [CurrentSym], al
     inc rsi
     mov al, byte[rsi]
     mov [cur_len], al
     inc rsi
-;     push rsi
-;     push rdi
-;     mov rsi, cur_len
-;     call StrToInt64
-;     pop rdi
-;     pop rsi
     push rcx
     mov rcx, rax
     sub rcx, 48
+    add [len], rcx
     push rsi
     mov al, [CurrentSym]
     rep stosb
@@ -59,7 +49,10 @@ zap:
     jmp loop1
 
 exit:
-     ; mov     [rdx], esi
+     lea rdi, [text1]
+     call print
+     pop rax
+     pop rcx
      mov     rsp,rbp
      pop     rbp
      ret
